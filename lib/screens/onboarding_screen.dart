@@ -68,7 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           const Icon(Icons.menu_book, size: 38, color: Color(0xFF185FA5)),
           const SizedBox(height: 14),
-          const Text('Tu diario, a tu manera', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+          const Text('Ánima, tu día a tu manera', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
           const SizedBox(height: 10),
           const Text(
             'Te vamos a hacer unas preguntas rápidas para saber qué te gustaría registrar. Puedes cambiarlo cuando quieras.',
@@ -143,7 +143,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           const Icon(Icons.check_circle, size: 30, color: Color(0xFF3B6D11)),
           const SizedBox(height: 12),
-          const Text('Tu diario está listo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          const Text('Tu Ánima está lista', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
           const Text('Podrás cambiar esto cuando quieras desde Configurar campos.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Colors.grey)),
           const SizedBox(height: 14),

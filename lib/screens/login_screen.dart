@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 40),
               const Icon(Icons.menu_book, size: 40, color: Color(0xFF185FA5)),
               const SizedBox(height: 8),
-              const Text('Tu diario', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              const Text('Ánima', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
               const SizedBox(height: 28),
               Container(
                 decoration: BoxDecoration(color: const Color(0xFFF1EFE8), borderRadius: BorderRadius.circular(10)),

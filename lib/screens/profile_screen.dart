@@ -62,7 +62,7 @@ class ProfileScreen extends StatelessWidget {
             title: const Text('Eliminar cuenta', style: TextStyle(color: AppColors.danger)),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DeleteAccountScreen())),
           ),
-          const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Center(child: Text('Tu diario · versión 1.0', style: TextStyle(fontSize: 10, color: Colors.grey)))),
+          const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Center(child: Text('Ánima · versión 1.0', style: TextStyle(fontSize: 10, color: Colors.grey)))),
         ],
       ),
     );

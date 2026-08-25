@@ -29,6 +29,11 @@ class AppState extends ChangeNotifier {
   bool? onboardingComplete;
   final Map<String, bool> onboardingAnswers = {};
 
+  // ---- Optional sections (toggled in Configurar campos) ----
+  bool dreamsEnabled = false;
+  bool booksEnabled = false;
+  bool cycleEnabled = false;
+
   // ---- Calendar filter ----
   String filterType = 'field';
   String filterKey = 'animo';
@@ -64,12 +69,34 @@ class AppState extends ChangeNotifier {
   Future<void> initializeForUser(String newUid) async {
     uid = newUid;
     final profile = await FirebaseFirestore.instance.collection('users').doc(newUid).get();
-    onboardingComplete = (profile.data()?['onboardingComplete'] as bool?) ?? false;
+    final profileData = profile.data();
+    final onboardingAnswersSaved = profileData?['onboardingAnswers'] as Map<String, dynamic>?;
+    onboardingComplete = (profileData?['onboardingComplete'] as bool?) ?? false;
+    dreamsEnabled = (profileData?['dreamsEnabled'] as bool?) ?? (onboardingAnswersSaved?['diario_suenos'] as bool?) ?? false;
+    booksEnabled = (profileData?['booksEnabled'] as bool?) ?? (onboardingAnswersSaved?['lectura'] as bool?) ?? false;
+    cycleEnabled = (profileData?['cycleEnabled'] as bool?) ?? (onboardingAnswersSaved?['ciclo'] as bool?) ?? false;
 
     await _loadToday();
     await loadMonth(visibleMonth);
     _subscribeHabits();
 
+    notifyListeners();
+  }
+
+  Future<void> setSectionEnabled(String key, bool value) async {
+    if (uid == null) return;
+    switch (key) {
+      case 'dreams':
+        dreamsEnabled = value;
+        break;
+      case 'books':
+        booksEnabled = value;
+        break;
+      case 'cycle':
+        cycleEnabled = value;
+        break;
+    }
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({'${key}Enabled': value}, SetOptions(merge: true));
     notifyListeners();
   }
 

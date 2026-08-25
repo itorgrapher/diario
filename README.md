@@ -1,37 +1,21 @@
-# Tu diario
+# Ánima
 
-Segundo hito: cuentas reales con Firebase, y las entradas (texto, ánimo/sueño/energía/líbido/estrés, gratitud y fotos) se guardan de verdad en la nube — ya no se pierden al cerrar la app. Las tareas, la hidratación y el ejercicio de cada día también se guardan y quedan en el histórico del calendario.
+Rediseño visual y de navegación siguiendo el estilo editorial de la referencia que me pasaste: título en tipografía serif, calendario con círculos de ánimo por icono, tarjetas de "Hoy" en fila, y navegación híbrida (barra inferior para contenido, menú lateral para ajustes).
 
-**Lo que queda para el siguiente bloque** (ya decidido, pendiente de montar): dictado y notas de voz, bloqueo biométrico, recordatorio diario, ubicación automática, y compartir una entrada como imagen. Diario de sueños, Mis lecturas y Ciclo siguen siendo de ejemplo por ahora (se conectan a Firebase en un paso posterior).
+**Navegación:**
+- Barra inferior: Calendario, Seguimiento, Sueños (solo si lo activaste), Desahogo.
+- Menú lateral (☰, desde el Calendario): Configurar campos, Perfil — y, si los tienes activados, Mis lecturas y Ciclo — y Cerrar sesión.
 
-## Antes de compilar — dos pasos tuyos, imprescindibles
-
-### 1. Reglas de seguridad de Firestore
-Sin esto, la app compilará pero nada se guardará (error de "permiso denegado"). Ve a Firebase → **Firestore Database → Reglas**, y pega:
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
-Pulsa "Publicar".
-
-### 2. Authentication activado
-Firebase → **Authentication → Sign-in method** → activa **Correo electrónico/contraseña** (si no lo hiciste ya).
+## Antes de compilar
+Los mismos dos pasos de Firebase de la vez anterior (reglas de Firestore + Authentication activado) siguen siendo necesarios. Si ya los hiciste, no hace falta repetirlos.
 
 ## Cómo compilar
-Igual que la vez anterior: sube estos archivos a tu repositorio de GitHub (sustituyendo los que ya había) y la pestaña **Actions** compilará el APK automáticamente. El flujo ya incluye una corrección automática para un problema conocido de compatibilidad entre Firebase y Android (minSdkVersion), así que no tienes que tocar nada de Android tú mismo.
+Igual que siempre: sustituye tus archivos por estos (esta vez cambia prácticamente todo `lib/`, más `pubspec.yaml` por la fuente nueva) y sube con GitHub Desktop. La pestaña Actions compilará el APK.
 
-## Qué probar en el móvil
-1. Crea una cuenta con email y contraseña.
-2. Pasa el asistente de bienvenida.
-3. Escribe una entrada, marca ánimo, añade una foto.
-4. **Cierra la app del todo y vuelve a abrirla** — todo debería seguir ahí (esa es la prueba de que ya no vivimos solo en memoria).
-5. Marca tareas, vasos de agua y ejercicio en el calendario, y comprueba que un día pasado con ese registro se ve correctamente al tocarlo.
-6. Cierra sesión desde Perfil y desde el menú lateral — en ambos casos debe llevarte limpiamente a la pantalla de login.
+## Qué probar
+1. La pantalla de calendario: título "ÁNIMA" en serif, navegación de mes con flechas, círculos de ánimo por día, las tres tarjetas de hoy, y el botón de lápiz abajo.
+2. Toca la barra inferior — cambia entre Calendario, Seguimiento, Sueños (si está activo) y Desahogo sin perder tu sitio en cada uno.
+3. Abre el menú (☰) desde el calendario — deberías ver Configurar campos y Perfil siempre, y Mis lecturas/Ciclo solo si los activaste en Configurar campos.
+4. Activa o desactiva "Diario de sueños" en Configurar campos y comprueba que la pestaña aparece o desaparece de la barra inferior.
+
 

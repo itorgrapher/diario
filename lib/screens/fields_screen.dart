@@ -30,11 +30,6 @@ class _FieldsScreenState extends State<FieldsScreen> {
     _Toggle(Icons.water_drop, 'Hidratación', true),
     _Toggle(Icons.directions_run, 'Ejercicio', true),
   ];
-  final List<_Toggle> menuSections = [
-    _Toggle(Icons.auto_awesome, 'Diario de sueños', false),
-    _Toggle(Icons.menu_book, 'Mis lecturas', false),
-    _Toggle(Icons.water_drop, 'Ciclo', false),
-  ];
 
   Widget _section(String title, List<_Toggle> items) {
     return Column(
@@ -84,7 +79,31 @@ class _FieldsScreenState extends State<FieldsScreen> {
         children: [
           _section('Campos de la entrada diaria', dailyFields),
           _section('Tarjetas del calendario', calendarCards),
-          _section('Secciones del menú', menuSections),
+          const Padding(padding: EdgeInsets.fromLTRB(4, 12, 4, 4), child: Text('Secciones del menú', style: TextStyle(fontSize: 11, color: Colors.grey))),
+          SwitchListTile(
+            secondary: const Icon(Icons.auto_awesome, size: 20),
+            title: const Text('Diario de sueños', style: TextStyle(fontSize: 13)),
+            value: app.dreamsEnabled,
+            onChanged: (v) => app.setSectionEnabled('dreams', v),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.menu_book, size: 20),
+            title: const Text('Mis lecturas', style: TextStyle(fontSize: 13)),
+            value: app.booksEnabled,
+            onChanged: (v) => app.setSectionEnabled('books', v),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.water_drop, size: 20),
+            title: const Text('Ciclo', style: TextStyle(fontSize: 13)),
+            value: app.cycleEnabled,
+            onChanged: (v) => app.setSectionEnabled('cycle', v),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
           const Padding(padding: EdgeInsets.fromLTRB(4, 12, 4, 4), child: Text('Tus rachas personalizadas', style: TextStyle(fontSize: 11, color: Colors.grey))),
           ...List.generate(app.habits.length, (i) {
             return Card(

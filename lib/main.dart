@@ -8,15 +8,9 @@ import 'app_state.dart';
 import 'theme.dart';
 import 'screens/login_screen.dart';
 import 'screens/onboarding_screen.dart';
-import 'screens/calendar_screen.dart';
+import 'screens/home_shell.dart';
 import 'screens/new_entry_screen.dart';
-import 'screens/tracking_screen.dart';
 import 'screens/fields_screen.dart';
-import 'screens/profile_screen.dart';
-import 'screens/dreams_screen.dart';
-import 'screens/books_screen.dart';
-import 'screens/cycle_screen.dart';
-import 'screens/burn_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,33 +19,26 @@ Future<void> main() async {
   runApp(
     ChangeNotifierProvider(
       create: (_) => AppState(),
-      child: const TuDiarioApp(),
+      child: const AnimaApp(),
     ),
   );
 }
 
-class TuDiarioApp extends StatelessWidget {
-  const TuDiarioApp({super.key});
+class AnimaApp extends StatelessWidget {
+  const AnimaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tu diario',
+      title: 'Ánima',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       home: const AuthGate(),
       routes: {
         '/login': (_) => const LoginScreen(),
         '/onboarding': (_) => const OnboardingScreen(),
-        '/calendar': (_) => const CalendarScreen(),
         '/new-entry': (_) => const NewEntryScreen(),
-        '/tracking': (_) => const TrackingScreen(),
         '/fields': (_) => const FieldsScreen(),
-        '/profile': (_) => const ProfileScreen(),
-        '/dreams': (_) => const DreamsScreen(),
-        '/books': (_) => const BooksScreen(),
-        '/cycle': (_) => const CycleScreen(),
-        '/burn': (_) => const BurnScreen(),
       },
     );
   }
@@ -78,7 +65,7 @@ class AuthGate extends StatelessWidget {
         if (app.uid != user.uid) {
           app.initializeForUser(user.uid);
         }
-        return const CalendarScreen();
+        return const HomeShell();
       },
     );
   }
