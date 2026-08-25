@@ -25,14 +25,28 @@ jobs:
           cp -r lib scaffold_tmp/lib
           cp pubspec.yaml scaffold_tmp/pubspec.yaml
 
-      - name: Ensure minSdkVersion is high enough for Firebase
+      - name: Ensure Android SDK versions are high enough for Firebase and plugins
         run: |
-          if [ -f scaffold_tmp/android/app/build.gradle.kts ]; then
-            sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' scaffold_tmp/android/app/build.gradle.kts
+          KTS="scaffold_tmp/android/app/build.gradle.kts"
+          GROOVY="scaffold_tmp/android/app/build.gradle"
+          if [ -f "$KTS" ]; then
+            sed -i '/^\s*minSdk\s*=.*/d' "$KTS"
+            sed -i '/^\s*minSdkVersion\s*=.*/d' "$KTS"
+            sed -i '/^\s*compileSdk\s*=.*/d' "$KTS"
+            sed -i '/^\s*compileSdkVersion\s*=.*/d' "$KTS"
+            sed -i '/defaultConfig {/a\        minSdk = 23' "$KTS"
+            sed -i '/android {/a\    compileSdk = 35' "$KTS"
           fi
-          if [ -f scaffold_tmp/android/app/build.gradle ]; then
-            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' scaffold_tmp/android/app/build.gradle
+          if [ -f "$GROOVY" ]; then
+            sed -i '/^\s*minSdkVersion .*/d' "$GROOVY"
+            sed -i '/^\s*minSdk .*/d' "$GROOVY"
+            sed -i '/^\s*compileSdkVersion .*/d' "$GROOVY"
+            sed -i '/^\s*compileSdk .*/d' "$GROOVY"
+            sed -i '/defaultConfig {/a\        minSdkVersion 23' "$GROOVY"
+            sed -i '/android {/a\    compileSdkVersion 35' "$GROOVY"
           fi
+          echo "---- resulting android block ----"
+          cat "$KTS" 2>/dev/null || cat "$GROOVY" 2>/dev/null
 
       - name: Get dependencies
         working-directory: scaffold_tmp
