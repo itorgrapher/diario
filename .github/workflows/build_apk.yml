@@ -26,6 +26,7 @@ jobs:
           cp pubspec.yaml scaffold_tmp/pubspec.yaml
 
       - name: Ensure Android SDK versions are high enough for Firebase and plugins
+      - name: Ensure minSdkVersion is high enough for Firebase
         run: |
           KTS="scaffold_tmp/android/app/build.gradle.kts"
           GROOVY="scaffold_tmp/android/app/build.gradle"
