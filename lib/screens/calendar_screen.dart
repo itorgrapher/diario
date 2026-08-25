@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../app_state.dart';
 import '../theme.dart';
 import '../widgets/app_drawer.dart';
+import 'entry_detail_screen.dart';
 
 class CalendarScreen extends StatelessWidget {
   const CalendarScreen({super.key});
@@ -26,11 +28,13 @@ class CalendarScreen extends StatelessWidget {
                     },
                   )),
               const Padding(padding: EdgeInsets.fromLTRB(16, 8, 16, 4), child: Text('Tus rachas', style: TextStyle(fontSize: 12, color: Colors.grey))),
+              if (app.habits.isEmpty)
+                const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 12), child: Text('Todavía no tienes ninguna racha creada.', style: TextStyle(fontSize: 12, color: Colors.grey))),
               ...app.habits.map((h) => ListTile(
                     leading: const Icon(Icons.local_fire_department, size: 20),
-                    title: Text(h),
+                    title: Text(h['name'] as String),
                     onTap: () {
-                      app.setFilter('habit', h);
+                      app.setFilter('habit', h['name'] as String);
                       Navigator.pop(ctx);
                     },
                   )),
@@ -41,20 +45,26 @@ class CalendarScreen extends StatelessWidget {
     );
   }
 
+  void _openDay(BuildContext context, DateTime date) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => EntryDetailScreen(date: date)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
     final isFieldFilter = app.filterType == 'field';
     final currentDef = isFieldFilter ? fieldDefs[app.filterKey] : null;
+    final monthLabel = DateFormat.yMMMM('es').format(app.visibleMonth);
 
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
-        title: const Text('Agosto 2026'),
+        title: Text(_capitalize(monthLabel)),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: Icon(app.entryText.isNotEmpty ? Icons.edit_outlined : Icons.add),
+            tooltip: app.entryText.isNotEmpty ? 'Continuar entrada de hoy' : 'Nueva entrada',
             onPressed: () => Navigator.of(context).pushNamed('/new-entry'),
           ),
         ],
@@ -87,67 +97,21 @@ class CalendarScreen extends StatelessWidget {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _legend(app),
-          ),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _legend(app)),
           const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _calendarGrid(context, app),
-          ),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _calendarGrid(context, app)),
           const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _todoCard(context, app),
-          ),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _todoCard(context, app)),
           const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _waterCard(context, app),
-          ),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _waterCard(context, app)),
           const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _exerciseCard(context, app),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Card(
-              child: ListTile(
-                leading: const Icon(Icons.format_quote, color: Colors.grey),
-                title: const Text('Hace un año, hoy', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                subtitle: const Text('"Salí a hacer fotos por el Albaicín al atardecer, luz increíble..."'),
-                onTap: () => Navigator.of(context).pushNamed('/entry-detail'),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bgAccent, borderRadius: BorderRadius.circular(10)),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.lightbulb_outline, size: 16, color: AppColors.accent),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Los días que duermes menos de 6h sueles marcar el ánimo más bajo. Se repite 6 de las últimas 8 veces.',
-                      style: TextStyle(fontSize: 11, color: AppColors.accent, height: 1.4),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _exerciseCard(context, app)),
         ],
       ),
     );
   }
+
+  static String _capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
   Widget _legend(AppState app) {
     List<Widget> chips;
@@ -158,9 +122,7 @@ class CalendarScreen extends StatelessWidget {
       ];
     } else {
       final f = fieldDefs[app.filterKey]!;
-      chips = f.order
-          .map((v) => _legendDot(valueColorBg(f.key, v), valueIcon(f.key, v), valueColorFg(f.key, v)))
-          .toList();
+      chips = f.order.map((v) => _legendDot(valueColorBg(f.key, v), valueIcon(f.key, v), valueColorFg(f.key, v))).toList();
     }
     return Wrap(spacing: 10, children: chips);
   }
@@ -170,35 +132,48 @@ class CalendarScreen extends StatelessWidget {
   }
 
   Widget _calendarGrid(BuildContext context, AppState app) {
+    final month = app.visibleMonth;
+    final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
+    final leadingEmpty = DateTime(month.year, month.month, 1).weekday - 1; // Monday = 0
+    final todayDay = DateTime.now().year == month.year && DateTime.now().month == month.month ? DateTime.now().day : -1;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: 31,
+      itemCount: daysInMonth + leadingEmpty,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7, mainAxisSpacing: 5, crossAxisSpacing: 5, childAspectRatio: 1),
       itemBuilder: (ctx, i) {
-        final day = i + 1;
-        final data = app.dayData[day];
+        if (i < leadingEmpty) return const SizedBox.shrink();
+        final day = i - leadingEmpty + 1;
+
         Color? bg;
-        if (data != null) {
-          if (app.filterType == 'field') {
-            final v = data[app.filterKey] as String?;
-            if (v != null) bg = valueColorBg(app.filterKey, v);
+        if (app.filterType == 'field') {
+          final entry = app.monthEntries[day];
+          final daily = app.monthDaily[day];
+          String? v;
+          if (app.filterKey == 'hidratacion') {
+            final water = daily?['water'] as int?;
+            if (water != null) v = water <= 3 ? 'bajo' : (water <= 6 ? 'medio' : 'alto');
+          } else if (app.filterKey == 'ejercicio') {
+            v = daily?['exercise'] as String?;
           } else {
-            final habitsMap = data['habits'] as Map<String, String?>;
-            final v = habitsMap[app.filterKey];
-            if (v != null) bg = v == 'si' ? AppColors.greenBg : AppColors.redBg;
+            v = entry?[app.filterKey] as String?;
           }
+          if (v != null) bg = valueColorBg(app.filterKey, v);
         }
+        // Habit-based history isn't tracked per past day in this milestone yet.
+
+        final isToday = day == todayDay;
         return GestureDetector(
-          onTap: () => Navigator.of(context).pushNamed('/entry-detail'),
+          onTap: () => _openDay(context, DateTime(month.year, month.month, day)),
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: bg ?? Colors.transparent,
-              border: bg == null ? Border.all(color: Colors.grey.shade300) : null,
+              border: bg == null ? Border.all(color: isToday ? AppColors.accent : Colors.grey.shade300, width: isToday ? 1.4 : 1) : null,
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Text('$day', style: TextStyle(fontSize: 11, color: bg == null ? Colors.grey : Colors.black87)),
+            child: Text('$day', style: TextStyle(fontSize: 11, color: bg == null ? (isToday ? AppColors.accent : Colors.grey) : Colors.black87, fontWeight: isToday ? FontWeight.w700 : FontWeight.normal)),
           ),
         );
       },

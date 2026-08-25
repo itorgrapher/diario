@@ -25,6 +25,15 @@ jobs:
           cp -r lib scaffold_tmp/lib
           cp pubspec.yaml scaffold_tmp/pubspec.yaml
 
+      - name: Ensure minSdkVersion is high enough for Firebase
+        run: |
+          if [ -f scaffold_tmp/android/app/build.gradle.kts ]; then
+            sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' scaffold_tmp/android/app/build.gradle.kts
+          fi
+          if [ -f scaffold_tmp/android/app/build.gradle ]; then
+            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' scaffold_tmp/android/app/build.gradle
+          fi
+
       - name: Get dependencies
         working-directory: scaffold_tmp
         run: flutter pub get

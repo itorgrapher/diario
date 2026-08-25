@@ -1,7 +1,10 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../app_state.dart';
-import '../theme.dart';
+import '../services/cloudinary_service.dart';
 
 class NewEntryScreen extends StatefulWidget {
   const NewEntryScreen({super.key});
@@ -11,20 +14,39 @@ class NewEntryScreen extends StatefulWidget {
 }
 
 class _NewEntryScreenState extends State<NewEntryScreen> {
-  final TextEditingController _gratitudeController = TextEditingController();
-  final TextEditingController _textController = TextEditingController();
+  late final TextEditingController _gratitudeController;
+  late final TextEditingController _textController;
   bool _saved = false;
+  bool _uploadingPhoto = false;
+  Timer? _debounce;
 
   static const _trackerKeys = ['animo', 'sueno', 'energia', 'libido', 'estres'];
 
   @override
+  void initState() {
+    super.initState();
+    final app = context.read<AppState>();
+    _gratitudeController = TextEditingController(text: app.gratitudeText);
+    _textController = TextEditingController(text: app.entryText);
+  }
+
+  @override
   void dispose() {
+    _debounce?.cancel();
     _gratitudeController.dispose();
     _textController.dispose();
     super.dispose();
   }
 
-  void _markSaved() {
+  void _scheduleSave() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 700), _saveNow);
+  }
+
+  Future<void> _saveNow() async {
+    final app = context.read<AppState>();
+    await app.saveEntryNow(text: _textController.text, gratitude: _gratitudeController.text);
+    if (!mounted) return;
     setState(() => _saved = true);
     Future.delayed(const Duration(milliseconds: 1600), () {
       if (mounted) setState(() => _saved = false);
@@ -37,20 +59,16 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       context: context,
       builder: (ctx) {
         return SafeArea(
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Wrap(
-                  spacing: 10,
-                  children: [
-                    _optionChip(ctx, app, fieldKey, null, Icons.close, Colors.grey.shade200, Colors.grey.shade700),
-                    ...f.order.map((v) => _optionChip(ctx, app, fieldKey, v, valueIcon(fieldKey, v), valueColorBg(fieldKey, v), valueColorFg(fieldKey, v))),
-                  ],
-                ),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Wrap(
+              spacing: 10,
+              alignment: WrapAlignment.center,
+              children: [
+                _optionChip(ctx, app, fieldKey, null, Icons.close, Colors.grey.shade200, Colors.grey.shade700),
+                ...f.order.map((v) => _optionChip(ctx, app, fieldKey, v, valueIcon(fieldKey, v), valueColorBg(fieldKey, v), valueColorFg(fieldKey, v))),
+              ],
+            ),
           ),
         );
       },
@@ -62,10 +80,29 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       onTap: () {
         app.setNewEntryField(fieldKey, value);
         Navigator.pop(ctx);
-        _markSaved();
+        _scheduleSave();
       },
       child: CircleAvatar(radius: 20, backgroundColor: bg, child: Icon(icon, size: 18, color: fg)),
     );
+  }
+
+  Future<void> _addPhoto() async {
+    final picker = ImagePicker();
+    final XFile? picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (picked == null) return;
+    setState(() => _uploadingPhoto = true);
+    try {
+      final url = await CloudinaryService.uploadImage(File(picked.path));
+      if (!mounted) return;
+      context.read<AppState>().addPhotoUrl(url);
+      _scheduleSave();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No se pudo subir la foto: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingPhoto = false);
+    }
   }
 
   @override
@@ -77,7 +114,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     return Scaffold(
       backgroundColor: washColor,
       appBar: AppBar(
-        title: const Text('22 de agosto', style: TextStyle(fontSize: 14)),
+        title: const Text('Hoy', style: TextStyle(fontSize: 14)),
         centerTitle: true,
         actions: [
           Padding(
@@ -137,7 +174,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                   child: TextField(
                     controller: _gratitudeController,
                     decoration: const InputDecoration(hintText: 'Algo por lo que estás agradecido hoy', border: InputBorder.none, isDense: true),
-                    onChanged: (_) => _markSaved(),
+                    onChanged: (_) => _scheduleSave(),
                   ),
                 ),
               ],
@@ -149,7 +186,27 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             maxLines: 8,
             minLines: 6,
             decoration: const InputDecoration(hintText: 'Escribe lo que quieras...', border: InputBorder.none),
-            onChanged: (_) => _markSaved(),
+            onChanged: (_) => _scheduleSave(),
+          ),
+          const SizedBox(height: 14),
+          if (app.entryPhotoUrls.isNotEmpty)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: app.entryPhotoUrls
+                  .map((url) => ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(url, width: 70, height: 70, fit: BoxFit.cover),
+                      ))
+                  .toList(),
+            ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _uploadingPhoto ? null : _addPhoto,
+            icon: _uploadingPhoto
+                ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.photo_outlined, size: 16),
+            label: Text(_uploadingPhoto ? 'Subiendo...' : 'Añadir foto'),
           ),
         ],
       ),

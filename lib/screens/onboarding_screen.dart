@@ -157,9 +157,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 18),
           FilledButton(
-            onPressed: () {
-              context.read<AppState>().onboardingAnswers.addAll(answers);
-              Navigator.of(context).pushReplacementNamed('/calendar');
+            onPressed: () async {
+              await context.read<AppState>().completeOnboarding(answers);
+              // AuthGate detecta que onboardingComplete pasó a true y
+              // cambia solo a la pantalla del calendario.
             },
             child: const Text('Empezar a escribir'),
           ),

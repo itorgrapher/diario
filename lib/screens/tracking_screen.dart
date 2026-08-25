@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../app_state.dart';
 import '../theme.dart';
+import 'entry_detail_screen.dart';
 
 class _TrendBar {
   final String label;
@@ -166,7 +167,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
           Wrap(
             spacing: 8,
             children: app.habits
-                .map((h) => Chip(avatar: const Icon(Icons.local_fire_department, size: 14), label: Text('$h · ${h == 'No fumar' ? 12 : 3} días', style: const TextStyle(fontSize: 12))))
+                .map((h) => Chip(avatar: const Icon(Icons.local_fire_department, size: 14), label: Text(h['name'] as String, style: const TextStyle(fontSize: 12))))
                 .toList(),
           ),
           const SizedBox(height: 16),
@@ -250,7 +251,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
               leading: const CircleAvatar(backgroundColor: AppColors.amberBg, child: Icon(Icons.sentiment_very_satisfied, color: AppColors.amberFg, size: 16)),
               title: const Text('22 de agosto · tu mejor día', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
               subtitle: const Text('Ánimo alto, buen sueño y mucha energía', style: TextStyle(fontSize: 11)),
-              onTap: () => Navigator.of(context).pushNamed('/entry-detail'),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EntryDetailScreen(date: DateTime.now()))),
             ),
           ),
           Card(
@@ -258,7 +259,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
               leading: const CircleAvatar(backgroundColor: AppColors.blueBg, child: Icon(Icons.sentiment_dissatisfied, color: AppColors.blueFg, size: 16)),
               title: const Text('8 de agosto · día más difícil', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
               subtitle: const Text('Poco sueño y ánimo bajo', style: TextStyle(fontSize: 11)),
-              onTap: () => Navigator.of(context).pushNamed('/entry-detail'),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EntryDetailScreen(date: DateTime.now()))),
             ),
           ),
           const SizedBox(height: 16),

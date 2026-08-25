@@ -1,51 +1,37 @@
 # Tu diario
 
-Proyecto Flutter con la app completa (sin backend todavía — los datos viven en memoria y se pierden al cerrar la app). Es el primer hito: conseguir una APK real instalada en tu móvil. La sincronización en la nube (Firebase) se añade en un segundo paso.
+Segundo hito: cuentas reales con Firebase, y las entradas (texto, ánimo/sueño/energía/líbido/estrés, gratitud y fotos) se guardan de verdad en la nube — ya no se pierden al cerrar la app. Las tareas, la hidratación y el ejercicio de cada día también se guardan y quedan en el histórico del calendario.
 
-## Qué contiene
+**Lo que queda para el siguiente bloque** (ya decidido, pendiente de montar): dictado y notas de voz, bloqueo biométrico, recordatorio diario, ubicación automática, y compartir una entrada como imagen. Diario de sueños, Mis lecturas y Ciclo siguen siendo de ejemplo por ahora (se conectan a Firebase en un paso posterior).
 
-- `lib/` — todo el código de la app (14 pantallas).
-- `pubspec.yaml` — dependencias (`provider` para el estado compartido).
-- `.github/workflows/build_apk.yml` — hace que GitHub compile el APK automáticamente.
+## Antes de compilar — dos pasos tuyos, imprescindibles
 
-## Pasos para conseguir tu APK
+### 1. Reglas de seguridad de Firestore
+Sin esto, la app compilará pero nada se guardará (error de "permiso denegado"). Ve a Firebase → **Firestore Database → Reglas**, y pega:
 
-### 1. Crea el repositorio en GitHub
-1. Entra en https://github.com/new
-2. Nombra el repositorio, por ejemplo `tu-diario-app`.
-3. Déjalo público o privado, como prefieras. No marques ninguna casilla de inicialización (README, .gitignore, licencia) — vamos a subir estos archivos directamente.
-
-### 2. Sube este proyecto
-Desde una terminal, dentro de esta carpeta:
-
-```bash
-git init
-git add .
-git commit -m "Primera versión de Tu diario"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/tu-diario-app.git
-git push -u origin main
 ```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
+Pulsa "Publicar".
 
-(Sustituye `TU_USUARIO` y `tu-diario-app` por los tuyos.)
+### 2. Authentication activado
+Firebase → **Authentication → Sign-in method** → activa **Correo electrónico/contraseña** (si no lo hiciste ya).
 
-### 3. Espera a que GitHub compile
-1. Ve a la pestaña **Actions** de tu repositorio en GitHub.
-2. Verás un flujo llamado "Build APK" ejecutándose (tarda unos 5-8 minutos la primera vez).
-3. Cuando termine con una marca verde, entra en esa ejecución y baja hasta **Artifacts**.
-4. Descarga `tu-diario-apk` (es un .zip que contiene el `.apk` dentro).
+## Cómo compilar
+Igual que la vez anterior: sube estos archivos a tu repositorio de GitHub (sustituyendo los que ya había) y la pestaña **Actions** compilará el APK automáticamente. El flujo ya incluye una corrección automática para un problema conocido de compatibilidad entre Firebase y Android (minSdkVersion), así que no tienes que tocar nada de Android tú mismo.
 
-### 4. Instala el APK en tu móvil
-1. Descomprime el .zip y pásate el archivo `app-release.apk` al móvil (por USB, Google Drive, email... lo que te resulte más cómodo).
-2. Ábrelo desde el móvil. Android avisará de que es de "origen desconocido" — es normal porque no viene de Google Play. Acepta permitirlo para esta instalación.
-3. Listo, ya tienes la app en tu móvil.
+## Qué probar en el móvil
+1. Crea una cuenta con email y contraseña.
+2. Pasa el asistente de bienvenida.
+3. Escribe una entrada, marca ánimo, añade una foto.
+4. **Cierra la app del todo y vuelve a abrirla** — todo debería seguir ahí (esa es la prueba de que ya no vivimos solo en memoria).
+5. Marca tareas, vasos de agua y ejercicio en el calendario, y comprueba que un día pasado con ese registro se ve correctamente al tocarlo.
+6. Cierra sesión desde Perfil y desde el menú lateral — en ambos casos debe llevarte limpiamente a la pantalla de login.
 
-## Qué esperar de esta primera versión
-
-- Todo lo que hemos diseñado funciona de verdad: login (sin verificación real todavía), asistente de 12 preguntas, calendario con filtro y las tres tarjetas del día, nueva entrada, detalle de entrada, Seguimiento, Configurar campos, Perfil (con sus subpantallas), Diario de sueños, Mis lecturas, Ciclo y Desahogo.
-- **No hay conexión a internet ni cuenta real todavía** — todo son datos de ejemplo en memoria. Si cierras la app del todo, se reinicia.
-- Los interruptores de "Configurar campos" son visuales por ahora; no ocultan aún los campos correspondientes en "nueva entrada" (eso lo conectamos en el siguiente paso, junto con Firebase).
-
-## Siguiente paso
-
-Cuando confirmes que el APK se instala y se navega bien, añadimos Firebase (cuenta real, guardado en la nube, fotos, notificaciones) para que nada se pierda al desinstalar — que era el requisito original.

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../theme.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -52,7 +53,10 @@ class ProfileScreen extends StatelessWidget {
           ListTile(leading: const Icon(Icons.mail_outline), title: const Text('Cambiar email'), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangeEmailScreen()))),
           const ListTile(leading: Icon(Icons.key_outlined), title: Text('Cambiar contraseña')),
           ListTile(leading: const Icon(Icons.devices_outlined), title: const Text('Dispositivos con sesión iniciada'), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DevicesScreen()))),
-          ListTile(leading: const Icon(Icons.logout), title: const Text('Cerrar sesión'), onTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false)),
+          ListTile(leading: const Icon(Icons.logout), title: const Text('Cerrar sesión'), onTap: () async {
+            await FirebaseAuth.instance.signOut();
+            if (context.mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+          }),
           ListTile(
             leading: const Icon(Icons.delete_outline, color: AppColors.danger),
             title: const Text('Eliminar cuenta', style: TextStyle(color: AppColors.danger)),
@@ -149,12 +153,21 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     super.dispose();
   }
 
-  void _confirm() {
+  void _confirm() async {
     if (_controller.text.trim() != 'ELIMINAR') {
       setState(() => _error = 'Escribe ELIMINAR exactamente para confirmar');
       return;
     }
-    Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false);
+    try {
+      await FirebaseAuth.instance.currentUser?.delete();
+      if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        setState(() => _error = 'Por seguridad, cierra sesión, vuelve a entrar, e inténtalo de nuevo.');
+      } else {
+        setState(() => _error = 'No se pudo eliminar la cuenta (${e.code}).');
+      }
+    }
   }
 
   @override

@@ -90,7 +90,7 @@ class _FieldsScreenState extends State<FieldsScreen> {
             return Card(
               child: ListTile(
                 leading: const Icon(Icons.local_fire_department, size: 18),
-                title: Text(app.habits[i], style: const TextStyle(fontSize: 13)),
+                title: Text(app.habits[i]['name'] as String, style: const TextStyle(fontSize: 13)),
                 trailing: IconButton(icon: const Icon(Icons.delete_outline, size: 18), onPressed: () => app.removeHabit(i)),
               ),
             );

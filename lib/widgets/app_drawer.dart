@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -41,7 +42,7 @@ class AppDrawer extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Cerrar sesión'),
-              onTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false),
+              onTap: () => FirebaseAuth.instance.signOut(),
             ),
             const Padding(
               padding: EdgeInsets.only(bottom: 8, left: 16),
