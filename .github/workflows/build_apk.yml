@@ -15,7 +15,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.22.3'
           channel: 'stable'
 
       - name: Create a fresh Flutter project scaffold
@@ -25,10 +25,13 @@ jobs:
           cp -r lib scaffold_tmp/lib
           cp pubspec.yaml scaffold_tmp/pubspec.yaml
 
-      - name: Ensure minSdkVersion is high enough for Firebase
+      - name: Ensure minSdkVersion and Kotlin version are high enough for Firebase
         run: |
           KTS="scaffold_tmp/android/app/build.gradle.kts"
           GROOVY="scaffold_tmp/android/app/build.gradle"
+          SETTINGS_KTS="scaffold_tmp/android/settings.gradle.kts"
+          TOP_GROOVY="scaffold_tmp/android/build.gradle"
+
           if [ -f "$KTS" ]; then
             sed -i '/^\s*minSdk\s*=.*/d' "$KTS"
             sed -i '/^\s*minSdkVersion\s*=.*/d' "$KTS"
@@ -39,8 +42,21 @@ jobs:
             sed -i '/^\s*minSdk .*/d' "$GROOVY"
             sed -i '/defaultConfig {/a\        minSdkVersion 23' "$GROOVY"
           fi
-          echo "---- resulting android block ----"
+
+          # Bump the Kotlin Gradle plugin version, whichever convention this
+          # Flutter version's template uses.
+          if [ -f "$SETTINGS_KTS" ]; then
+            sed -i -E 's/(id\("org\.jetbrains\.kotlin\.android"\) version ")[^"]+(")/\11.9.24\2/' "$SETTINGS_KTS"
+          fi
+          if [ -f "$TOP_GROOVY" ]; then
+            sed -i -E "s/ext\.kotlin_version = ['\"][^'\"]+['\"]/ext.kotlin_version = '1.9.24'/" "$TOP_GROOVY"
+          fi
+
+          echo "---- resulting app gradle file ----"
           cat "$KTS" 2>/dev/null || cat "$GROOVY" 2>/dev/null
+          echo "---- resulting settings/top-level gradle (kotlin version) ----"
+          grep -i kotlin "$SETTINGS_KTS" 2>/dev/null
+          grep -i kotlin_version "$TOP_GROOVY" 2>/dev/null
 
       - name: Get dependencies
         working-directory: scaffold_tmp
